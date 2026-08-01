@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useSettings } from '@/components/settings-provider'
 import type { Configuration, Position, Project } from '@/lib/types'
 import { emptyConfig } from '@/lib/config-schema'
 
@@ -143,6 +144,7 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { t } = useSettings()
   const [user, setUser] = useState<AppContextValue['user']>({
     name: 'Alex Meridian',
     email: 'alex@meridianbuild.com',
@@ -171,7 +173,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const project: Project = {
         id: uid(),
         name: data.name,
-        client: data.client || 'Private client',
+        client: data.client || t('createProject.defaultClient'),
         reference: data.reference || `AR-${Math.floor(1000 + Math.random() * 9000)}`,
         createdAt: now(),
         updatedAt: now(),
@@ -180,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setProjects((prev) => [project, ...prev])
       return project
     },
-    [],
+    [t],
   )
 
   const deleteProject = useCallback((id: string) => {
@@ -189,23 +191,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const touchProject = (p: Project): Project => ({ ...p, updatedAt: now() })
 
-  const addPosition = useCallback((projectId: string, name?: string) => {
-    const position: Position = {
-      id: uid(),
-      name: name ?? 'New position',
-      createdAt: now(),
-      updatedAt: now(),
-      config: emptyConfig(),
-    }
-    setProjects((prev) =>
-      prev.map((p) =>
-        p.id === projectId
-          ? touchProject({ ...p, positions: [...p.positions, position] })
-          : p,
-      ),
-    )
-    return position
-  }, [])
+  const addPosition = useCallback(
+    (projectId: string, name?: string) => {
+      const position: Position = {
+        id: uid(),
+        name: name ?? t('project.newPositionName'),
+        createdAt: now(),
+        updatedAt: now(),
+        config: emptyConfig(),
+      }
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId
+            ? touchProject({ ...p, positions: [...p.positions, position] })
+            : p,
+        ),
+      )
+      return position
+    },
+    [t],
+  )
 
   const updatePosition = useCallback(
     (
@@ -247,7 +252,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           created = {
             ...source,
             id: uid(),
-            name: `${source.name} (copy)`,
+            name: t('project.copySuffix', { name: source.name }),
             createdAt: now(),
             updatedAt: now(),
             config: { ...source.config, extras: [...source.config.extras] },
@@ -260,7 +265,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       )
       return created
     },
-    [],
+    [t],
   )
 
   const deletePosition = useCallback((projectId: string, positionId: string) => {

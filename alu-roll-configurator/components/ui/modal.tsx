@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
+import { useSettings } from '@/components/settings-provider'
 import { cn } from '@/lib/utils'
 
 export function Modal({
@@ -19,6 +20,8 @@ export function Modal({
   children: React.ReactNode
   className?: string
 }) {
+  const { t } = useSettings()
+
   useEffect(() => {
     if (!open) return
     function onKey(e: KeyboardEvent) {
@@ -54,7 +57,7 @@ export function Modal({
           type="button"
           onClick={onClose}
           className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Close"
+          aria-label={t('common.close')}
         >
           <X className="size-4" />
         </button>

@@ -1,3 +1,4 @@
+import type { TranslateFn } from '@/lib/i18n'
 import type {
   ApplicationId,
   Configuration,
@@ -16,198 +17,70 @@ export type StepId =
   | 'operation'
   | 'extras'
 
-export interface Option<T extends string> {
+export interface OptionBase<T extends string> {
   id: T
-  label: string
-  description: string
 }
 
-export const STEPS: { id: StepId; title: string; question: string; help: string }[] = [
-  {
-    id: 'application',
-    title: 'Application',
-    question: 'Where will this shutter go?',
-    help: 'This helps us suggest the right sizes and options for your opening.',
-  },
-  {
-    id: 'dimensions',
-    title: 'Size',
-    question: 'How large is the opening?',
-    help: 'Measure the width and height of the opening. We handle the technical tolerances for you.',
-  },
-  {
-    id: 'mounting',
-    title: 'Fitting',
-    question: 'How should it be fitted?',
-    help: 'Choose the option that matches the building situation.',
-  },
-  {
-    id: 'profile',
-    title: 'Type',
-    question: 'What matters most for this shutter?',
-    help: 'We only show types that are suitable for your chosen size.',
-  },
-  {
-    id: 'color',
-    title: 'Colour',
-    question: 'Pick a colour',
-    help: 'Choose from our most popular durable finishes.',
-  },
-  {
-    id: 'operation',
-    title: 'Operation',
-    question: 'How would you like to open and close it?',
-    help: 'Only options that work with your size are shown.',
-  },
-  {
-    id: 'extras',
-    title: 'Extras',
-    question: 'Add anything else?',
-    help: 'Optional additions. You can skip this step.',
-  },
+export const STEPS: { id: StepId }[] = [
+  { id: 'application' },
+  { id: 'dimensions' },
+  { id: 'mounting' },
+  { id: 'profile' },
+  { id: 'color' },
+  { id: 'operation' },
+  { id: 'extras' },
 ]
 
-export const APPLICATIONS: (Option<ApplicationId> & {
+export const APPLICATIONS: (OptionBase<ApplicationId> & {
   defaults: { width: number; height: number }
 })[] = [
-  {
-    id: 'window',
-    label: 'Window',
-    description: 'A standard window opening.',
-    defaults: { width: 1200, height: 1400 },
-  },
-  {
-    id: 'door',
-    label: 'Door or patio',
-    description: 'A door or full-height glazed opening.',
-    defaults: { width: 1000, height: 2100 },
-  },
-  {
-    id: 'large',
-    label: 'Large opening',
-    description: 'A wide sliding door or shopfront.',
-    defaults: { width: 2800, height: 2400 },
-  },
+  { id: 'window', defaults: { width: 1200, height: 1400 } },
+  { id: 'door', defaults: { width: 1000, height: 2100 } },
+  { id: 'large', defaults: { width: 2800, height: 2400 } },
 ]
 
-export const MOUNTINGS: Option<MountingId>[] = [
-  {
-    id: 'front',
-    label: 'On the wall',
-    description: 'Fitted in front of the opening. Ideal for existing buildings.',
-  },
-  {
-    id: 'built-in',
-    label: 'Concealed',
-    description: 'The box sits hidden behind the façade for a clean look.',
-  },
-  {
-    id: 'new-build',
-    label: 'Integrated',
-    description: 'Built into the wall during construction or renovation.',
-  },
+export const MOUNTINGS: OptionBase<MountingId>[] = [
+  { id: 'front' },
+  { id: 'built-in' },
+  { id: 'new-build' },
 ]
 
-export const PROFILES: (Option<ProfileId> & {
+export const PROFILES: (OptionBase<ProfileId> & {
   maxWidth: number
   maxHeight: number
 })[] = [
-  {
-    id: 'everyday',
-    label: 'Everyday',
-    description: 'Light and quiet. Perfect for most windows.',
-    maxWidth: 2000,
-    maxHeight: 2200,
-  },
-  {
-    id: 'insulated',
-    label: 'Best insulation',
-    description: 'Extra foam core for warmth, quiet and comfort.',
-    maxWidth: 3000,
-    maxHeight: 2800,
-  },
-  {
-    id: 'strong',
-    label: 'Extra strong',
-    description: 'Reinforced slats for large or exposed openings.',
-    maxWidth: 4000,
-    maxHeight: 3200,
-  },
+  { id: 'everyday', maxWidth: 2000, maxHeight: 2200 },
+  { id: 'insulated', maxWidth: 3000, maxHeight: 2800 },
+  { id: 'strong', maxWidth: 4000, maxHeight: 3200 },
 ]
 
-export const COLORS: { id: string; label: string; hex: string }[] = [
-  { id: 'traffic-white', label: 'Traffic white', hex: '#f4f4f1' },
-  { id: 'cream', label: 'Cream', hex: '#e9e2d0' },
-  { id: 'silver', label: 'Silver grey', hex: '#c3c7ca' },
-  { id: 'light-grey', label: 'Light grey', hex: '#9aa0a4' },
-  { id: 'anthracite', label: 'Anthracite', hex: '#3f4548' },
-  { id: 'graphite', label: 'Graphite black', hex: '#26292b' },
-  { id: 'sepia', label: 'Sepia brown', hex: '#6b5a49' },
-  { id: 'oxide', label: 'Oxide red', hex: '#7c3a35' },
+export const COLORS: { id: string; hex: string }[] = [
+  { id: 'traffic-white', hex: '#f4f4f1' },
+  { id: 'cream', hex: '#e9e2d0' },
+  { id: 'silver', hex: '#c3c7ca' },
+  { id: 'light-grey', hex: '#9aa0a4' },
+  { id: 'anthracite', hex: '#3f4548' },
+  { id: 'graphite', hex: '#26292b' },
+  { id: 'sepia', hex: '#6b5a49' },
+  { id: 'oxide', hex: '#7c3a35' },
 ]
 
-export const OPERATIONS: (Option<OperationId> & {
+export const OPERATIONS: (OptionBase<OperationId> & {
   maxAreaM2: number
   maxWidth: number
 })[] = [
-  {
-    id: 'strap',
-    label: 'Belt',
-    description: 'Manual belt inside the room. Simple and reliable.',
-    maxAreaM2: 2.6,
-    maxWidth: 1600,
-  },
-  {
-    id: 'crank',
-    label: 'Crank handle',
-    description: 'Manual crank. Effortless for medium sizes.',
-    maxAreaM2: 4.5,
-    maxWidth: 2400,
-  },
-  {
-    id: 'motor',
-    label: 'Motorised',
-    description: 'A quiet built-in motor with a wall switch.',
-    maxAreaM2: 100,
-    maxWidth: 6000,
-  },
-  {
-    id: 'motor-remote',
-    label: 'Motor + remote',
-    description: 'Open and close from anywhere in the room.',
-    maxAreaM2: 100,
-    maxWidth: 6000,
-  },
-  {
-    id: 'smart',
-    label: 'Smart home',
-    description: 'App control, schedules and voice assistants.',
-    maxAreaM2: 100,
-    maxWidth: 6000,
-  },
+  { id: 'strap', maxAreaM2: 2.6, maxWidth: 1600 },
+  { id: 'crank', maxAreaM2: 4.5, maxWidth: 2400 },
+  { id: 'motor', maxAreaM2: 100, maxWidth: 6000 },
+  { id: 'motor-remote', maxAreaM2: 100, maxWidth: 6000 },
+  { id: 'smart', maxAreaM2: 100, maxWidth: 6000 },
 ]
 
-export const EXTRAS: Option<ExtraId>[] = [
-  {
-    id: 'insect-screen',
-    label: 'Insect screen',
-    description: 'Integrated mesh to keep insects out.',
-  },
-  {
-    id: 'solar',
-    label: 'Solar powered',
-    description: 'No wiring needed — charges from daylight.',
-  },
-  {
-    id: 'obstacle-stop',
-    label: 'Obstacle detection',
-    description: 'Stops automatically if something is in the way.',
-  },
-  {
-    id: 'timer',
-    label: 'Automatic timer',
-    description: 'Opens and closes on a daily schedule.',
-  },
+export const EXTRAS: OptionBase<ExtraId>[] = [
+  { id: 'insect-screen' },
+  { id: 'solar' },
+  { id: 'obstacle-stop' },
+  { id: 'timer' },
 ]
 
 export const DIMENSION_LIMITS = {
@@ -294,23 +167,46 @@ export function emptyConfig(): Configuration {
   return { extras: [] }
 }
 
-// ---- Display helpers ---------------------------------------------------
+// ---- Localized display helpers ----------------------------------------
 
-export function applicationLabel(id?: ApplicationId) {
-  return APPLICATIONS.find((a) => a.id === id)?.label ?? '—'
+export function applicationLabel(id: ApplicationId | undefined, t: TranslateFn) {
+  if (!id) return t('common.emDash')
+  return t(`options.applications.${id}.label`)
 }
-export function mountingLabel(id?: MountingId) {
-  return MOUNTINGS.find((m) => m.id === id)?.label ?? '—'
+
+export function mountingLabel(id: MountingId | undefined, t: TranslateFn) {
+  if (!id) return t('common.emDash')
+  return t(`options.mountings.${id}.label`)
 }
-export function profileLabel(id?: ProfileId) {
-  return PROFILES.find((p) => p.id === id)?.label ?? '—'
+
+export function profileLabel(id: ProfileId | undefined, t: TranslateFn) {
+  if (!id) return t('common.emDash')
+  return t(`options.profiles.${id}.label`)
 }
-export function operationLabel(id?: OperationId) {
-  return OPERATIONS.find((o) => o.id === id)?.label ?? '—'
+
+export function operationLabel(id: OperationId | undefined, t: TranslateFn) {
+  if (!id) return t('common.emDash')
+  return t(`options.operations.${id}.label`)
 }
-export function colorLabel(hex?: string) {
-  return COLORS.find((c) => c.hex === hex)?.label ?? '—'
+
+export function colorLabel(hex: string | undefined, t: TranslateFn) {
+  if (!hex) return t('common.emDash')
+  const color = COLORS.find((c) => c.hex === hex)
+  return color ? t(`options.colors.${color.id}`) : t('common.emDash')
 }
-export function extraLabel(id: ExtraId) {
-  return EXTRAS.find((e) => e.id === id)?.label ?? id
+
+export function extraLabel(id: ExtraId, t: TranslateFn) {
+  return t(`options.extras.${id}.label`)
+}
+
+export function stepTitle(id: StepId, t: TranslateFn) {
+  return t(`steps.${id}.title`)
+}
+
+export function stepQuestion(id: StepId, t: TranslateFn) {
+  return t(`steps.${id}.question`)
+}
+
+export function stepHelp(id: StepId, t: TranslateFn) {
+  return t(`steps.${id}.help`)
 }

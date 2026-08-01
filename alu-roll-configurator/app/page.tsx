@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Check } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
+import { SettingsGearButton } from '@/components/settings-menu'
+import { useSettings } from '@/components/settings-provider'
 import { AluRollMark } from '@/components/brand'
 import { ShutterPreview } from '@/components/shutter-preview'
 import { Button } from '@/components/ui/button'
@@ -12,6 +14,7 @@ import { Input } from '@/components/ui/input'
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useApp()
+  const { t } = useSettings()
   const [email, setEmail] = useState('alex@meridianbuild.com')
   const [password, setPassword] = useState('demo1234')
 
@@ -22,27 +25,30 @@ export default function LoginPage() {
     router.push('/dashboard')
   }
 
+  const features = [t('login.feature1'), t('login.feature2'), t('login.feature3')]
+
   return (
     <div className="grid min-h-screen lg:grid-cols-[1fr_1.05fr]">
       {/* Left — form */}
       <div className="flex flex-col justify-between px-6 py-8 sm:px-12 lg:px-16">
-        <div className="flex items-center gap-2.5">
-          <AluRollMark className="size-8" />
-          <span className="text-base font-semibold tracking-tight">AluRoll</span>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <AluRollMark className="size-8" />
+            <span className="text-base font-semibold tracking-tight">AluRoll</span>
+          </div>
+          <SettingsGearButton />
         </div>
 
         <div className="mx-auto w-full max-w-sm py-12">
           <h1 className="text-2xl font-semibold tracking-tight text-balance">
-            Sign in to your workspace
+            {t('login.heading')}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Configure custom roller shutters in minutes.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{t('login.subtitle')}</p>
 
           <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-sm font-medium">
-                Work email
+                {t('login.email')}
               </label>
               <Input
                 id="email"
@@ -50,7 +56,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
+                placeholder={t('login.emailPlaceholder')}
                 required
               />
             </div>
@@ -58,13 +64,13 @@ export default function LoginPage() {
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="text-sm font-medium">
-                  Password
+                  {t('login.password')}
                 </label>
                 <button
                   type="button"
                   className="text-xs font-medium text-primary hover:underline"
                 >
-                  Forgot?
+                  {t('login.forgot')}
                 </button>
               </div>
               <Input
@@ -78,18 +84,16 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" size="lg" className="mt-2 h-11 w-full text-sm">
-              Continue
+              {t('login.continue')}
               <ArrowRight className="size-4" />
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Demo workspace — use the pre-filled details or your own email to continue.
-          </p>
+          <p className="mt-6 text-center text-xs text-muted-foreground">{t('login.demoNote')}</p>
         </div>
 
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} AluRoll. All rights reserved.
+          {t('login.copyright', { year: new Date().getFullYear() })}
         </p>
       </div>
 
@@ -98,19 +102,14 @@ export default function LoginPage() {
         <div className="flex h-full flex-col justify-center px-14 py-16">
           <div className="max-w-md">
             <h2 className="text-3xl font-semibold tracking-tight text-balance">
-              Every window, perfectly specified.
+              {t('login.showcaseTitle')}
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-              A guided configurator that hides the technical complexity, so you only ever
-              choose from valid options.
+              {t('login.showcaseBody')}
             </p>
 
             <ul className="mt-8 flex flex-col gap-3">
-              {[
-                'One decision at a time',
-                'Live visual preview as you build',
-                'Only technically valid choices',
-              ].map((item) => (
+              {features.map((item) => (
                 <li key={item} className="flex items-center gap-2.5 text-sm font-medium">
                   <span className="flex size-5 items-center justify-center rounded-full bg-primary/12 text-primary">
                     <Check className="size-3" />

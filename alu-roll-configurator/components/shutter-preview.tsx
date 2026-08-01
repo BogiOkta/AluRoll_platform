@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
+import { useSettings } from '@/components/settings-provider'
 import type { Configuration } from '@/lib/types'
 
 function shade(hex: string, amount: number) {
@@ -33,6 +34,8 @@ interface ShutterPreviewProps {
 }
 
 export function ShutterPreview({ config, openPercent }: ShutterPreviewProps) {
+  const { t } = useSettings()
+  const uid = useId().replace(/:/g, '')
   const color = config.color ?? '#c3c7ca'
   const widthMm = config.width ?? 1200
   const heightMm = config.height ?? 1400
@@ -68,54 +71,65 @@ export function ShutterPreview({ config, openPercent }: ShutterPreviewProps) {
   const railW = 10
   const isConcealed = config.mounting !== 'front'
 
+  const wallId = `wall-${uid}`
+  const glassId = `glass-${uid}`
+  const slatId = `slat-${uid}`
+  const softId = `soft-${uid}`
+
   return (
     <svg
       viewBox={`0 0 ${stage.w} ${stage.h}`}
       className="h-full w-full"
       role="img"
-      aria-label="Live preview of the configured roller shutter"
+      aria-label={t('preview.aria')}
     >
       <defs>
-        <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f2f3f5" />
-          <stop offset="100%" stopColor="#e8eaee" />
+        <linearGradient id={wallId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--preview-wall-1)" />
+          <stop offset="100%" stopColor="var(--preview-wall-2)" />
         </linearGradient>
-        <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#dbeafe" />
-          <stop offset="45%" stopColor="#eff6ff" />
-          <stop offset="100%" stopColor="#c7dbf5" />
+        <linearGradient id={glassId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--preview-glass-1)" />
+          <stop offset="45%" stopColor="var(--preview-glass-2)" />
+          <stop offset="100%" stopColor="var(--preview-glass-3)" />
         </linearGradient>
-        <linearGradient id="slat" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={slatId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={shade(color, 0.16)} />
           <stop offset="50%" stopColor={color} />
           <stop offset="100%" stopColor={shade(color, -0.14)} />
         </linearGradient>
-        <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#0f172a" floodOpacity="0.12" />
+        <filter id={softId} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow
+            dx="0"
+            dy="8"
+            stdDeviation="10"
+            floodColor="var(--preview-shadow)"
+            floodOpacity="0.12"
+          />
         </filter>
       </defs>
 
       {/* wall */}
-      <rect x="0" y="0" width={stage.w} height={stage.h} fill="url(#wall)" />
+      <rect x="0" y="0" width={stage.w} height={stage.h} fill={`url(#${wallId})`} />
 
       {/* window reveal + glass */}
-      <g filter="url(#soft)">
+      <g filter={`url(#${softId})`}>
         <rect
           x={winX - 6}
           y={winY - 6}
           width={winW + 12}
           height={winH + 12}
           rx="6"
-          fill="#ffffff"
+          fill="var(--preview-frame)"
         />
-        <rect x={winX} y={winY} width={winW} height={winH} fill="url(#glass)" />
+        <rect x={winX} y={winY} width={winW} height={winH} fill={`url(#${glassId})`} />
         {/* window mullion */}
         <line
           x1={winX + winW / 2}
           y1={winY}
           x2={winX + winW / 2}
           y2={winY + winH}
-          stroke="#ffffff"
+          stroke="var(--preview-mullion)"
           strokeWidth="3"
           opacity="0.7"
         />
@@ -124,7 +138,7 @@ export function ShutterPreview({ config, openPercent }: ShutterPreviewProps) {
           y1={winY + winH / 2}
           x2={winX + winW}
           y2={winY + winH / 2}
-          stroke="#ffffff"
+          stroke="var(--preview-mullion)"
           strokeWidth="3"
           opacity="0.7"
         />
@@ -166,9 +180,8 @@ export function ShutterPreview({ config, openPercent }: ShutterPreviewProps) {
                 width={winW - 2}
                 height={slatHeight}
                 rx="2.5"
-                fill="url(#slat)"
+                fill={`url(#${slatId})`}
               />
-              {/* ventilation dots on the lowest visible slat when nearly closed */}
             </g>
           )
         })}
@@ -176,7 +189,7 @@ export function ShutterPreview({ config, openPercent }: ShutterPreviewProps) {
 
       {/* shutter box */}
       {config.mounting && (
-        <g filter="url(#soft)">
+        <g filter={`url(#${softId})`}>
           <rect
             x={isConcealed ? winX - railW : winX - railW - 3}
             y={pad}

@@ -4,11 +4,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
+import { useSettings } from '@/components/settings-provider'
+import { SettingsPopover } from '@/components/settings-menu'
 import { initials } from '@/lib/format'
 import { AluRollMark } from '@/components/brand'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useApp()
+  const { t } = useSettings()
   const router = useRouter()
 
   return (
@@ -21,21 +24,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               AluRoll
             </span>
             <span className="hidden rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground sm:inline-block">
-              Configurator
+              {t('common.configurator')}
             </span>
           </Link>
 
           <div className="flex items-center gap-3">
             {user && (
-              <div className="hidden items-center gap-2.5 sm:flex">
-                <div className="text-right leading-tight">
-                  <div className="text-sm font-medium text-foreground">{user.name}</div>
-                  <div className="text-xs text-muted-foreground">{user.company}</div>
-                </div>
-                <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                  {initials(user.name)}
-                </div>
-              </div>
+              <SettingsPopover
+                trigger={
+                  <div className="flex items-center gap-2.5 rounded-lg px-1 py-1 transition-colors hover:bg-muted/70">
+                    <div className="hidden text-right leading-tight sm:block">
+                      <div className="text-sm font-medium text-foreground">{user.name}</div>
+                      <div className="text-xs text-muted-foreground">{user.company}</div>
+                    </div>
+                    <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                      {initials(user.name)}
+                    </div>
+                  </div>
+                }
+              />
             )}
             <button
               type="button"
@@ -44,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 router.push('/')
               }}
               className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Sign out"
+              aria-label={t('common.signOut')}
             >
               <LogOut className="size-4" />
             </button>

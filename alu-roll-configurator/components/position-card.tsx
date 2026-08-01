@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Copy, Pencil, Trash2 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { ShutterPreview } from '@/components/shutter-preview'
+import { useSettings } from '@/components/settings-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -29,18 +30,19 @@ export function PositionCard({
 }) {
   const router = useRouter()
   const { duplicatePosition, deletePosition } = useApp()
+  const { t } = useSettings()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const complete = isConfigComplete(position.config)
   const progress = configProgress(position.config)
   const c = position.config
 
   const specs: { label: string; value: string }[] = [
-    { label: 'Application', value: applicationLabel(c.application) },
-    { label: 'Size', value: formatDimensions(c.width, c.height) },
-    { label: 'Fitting', value: mountingLabel(c.mounting) },
-    { label: 'Type', value: profileLabel(c.profile) },
-    { label: 'Colour', value: colorLabel(c.color) },
-    { label: 'Operation', value: operationLabel(c.operation) },
+    { label: t('position.application'), value: applicationLabel(c.application, t) },
+    { label: t('position.size'), value: formatDimensions(c.width, c.height, t) },
+    { label: t('position.fitting'), value: mountingLabel(c.mounting, t) },
+    { label: t('position.type'), value: profileLabel(c.profile, t) },
+    { label: t('position.colour'), value: colorLabel(c.color, t) },
+    { label: t('position.operation'), value: operationLabel(c.operation, t) },
   ]
 
   return (
@@ -65,13 +67,13 @@ export function PositionCard({
           <div className="min-w-0">
             <p className="truncate font-semibold">{position.name}</p>
             <p className="text-xs text-muted-foreground">
-              {applicationLabel(c.application)} · {formatDimensions(c.width, c.height)}
+              {applicationLabel(c.application, t)} · {formatDimensions(c.width, c.height, t)}
             </p>
           </div>
           {complete ? (
-            <Badge variant="success">Ready</Badge>
+            <Badge variant="success">{t('position.ready')}</Badge>
           ) : (
-            <Badge variant="warning">{progress}% done</Badge>
+            <Badge variant="warning">{t('position.pctDone', { pct: progress })}</Badge>
           )}
         </div>
 
@@ -96,7 +98,7 @@ export function PositionCard({
             }
           >
             <Pencil className="size-3.5" />
-            {complete ? 'Edit' : 'Continue'}
+            {complete ? t('position.edit') : t('position.continue')}
           </Button>
           <Button
             size="sm"
@@ -105,14 +107,14 @@ export function PositionCard({
             onClick={() => duplicatePosition(projectId, position.id)}
           >
             <Copy className="size-3.5" />
-            Duplicate
+            {t('position.duplicate')}
           </Button>
           <Button
             size="icon-sm"
             variant="ghost"
             className="ml-auto text-muted-foreground hover:text-destructive"
             onClick={() => setConfirmOpen(true)}
-            aria-label="Delete position"
+            aria-label={t('position.deleteAria')}
           >
             <Trash2 className="size-3.5" />
           </Button>
@@ -123,8 +125,8 @@ export function PositionCard({
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={() => deletePosition(projectId, position.id)}
-        title="Delete position?"
-        description={`"${position.name}" will be permanently removed from this project.`}
+        title={t('position.deleteTitle')}
+        description={t('position.deleteDescription', { name: position.name })}
       />
     </div>
   )

@@ -23,6 +23,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
+import { useSettings } from '@/components/settings-provider'
 import { ShutterPreview } from '@/components/shutter-preview'
 import { OptionCard } from '@/components/wizard/option-card'
 import { Badge } from '@/components/ui/badge'
@@ -50,9 +51,13 @@ import {
   mountingLabel,
   operationLabel,
   profileLabel,
+  stepHelp,
+  stepQuestion,
+  stepTitle,
   type StepId,
 } from '@/lib/config-schema'
 import { formatDimensions } from '@/lib/format'
+import type { TranslateFn } from '@/lib/i18n'
 import type {
   ApplicationId,
   Configuration,
@@ -110,13 +115,16 @@ export function Configurator({
 }) {
   const router = useRouter()
   const { getProject, updatePosition } = useApp()
+  const { t } = useSettings()
   const project = getProject(projectId)
   const position = project?.positions.find((p) => p.id === positionId)
 
   const [config, setConfig] = useState<Configuration>(
     () => position?.config ?? { extras: [] },
   )
-  const [name, setName] = useState(() => position?.name ?? 'New position')
+  const [name, setName] = useState(
+    () => position?.name ?? t('project.newPositionName'),
+  )
   const [stepIndex, setStepIndex] = useState(0)
   const [openPercent, setOpenPercent] = useState(60)
 
@@ -140,9 +148,11 @@ export function Configurator({
   const commitName = useCallback(
     (value: string) => {
       setName(value)
-      updatePosition(projectId, positionId, { name: value || 'Untitled position' })
+      updatePosition(projectId, positionId, {
+        name: value || t('configure.untitled'),
+      })
     },
-    [projectId, positionId, updatePosition],
+    [projectId, positionId, updatePosition, t],
   )
 
   const stepComplete = isStepComplete(config, step.id)
@@ -167,29 +177,39 @@ export function Configurator({
   if (!project || !position) {
     return (
       <div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-muted-foreground">
-        Position not found.
+        {t('configure.notFound')}
       </div>
     )
   }
 
+  const choicesLeft = 6 - REQUIRED_DONE(config)
+
   return (
     <div className="mx-auto max-w-7xl px-5 py-6">
       {/* Step rail */}
-      <StepRail config={config} current={step.id} onJump={(i) => setStepIndex(i)} index={stepIndex} />
+      <StepRail
+        config={config}
+        current={step.id}
+        onJump={(i) => setStepIndex(i)}
+        index={stepIndex}
+        t={t}
+      />
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_320px]">
         {/* LEFT — question + controls */}
         <section className="flex flex-col">
           <p className="text-xs font-semibold tracking-wide text-primary uppercase">
-            Step {stepIndex + 1} of {STEPS.length}
+            {t('configure.stepOf', { current: stepIndex + 1, total: STEPS.length })}
           </p>
           <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-balance">
-            {step.question}
+            {stepQuestion(step.id, t)}
           </h1>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{step.help}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            {stepHelp(step.id, t)}
+          </p>
 
           <div className="mt-5">
-            <StepControls config={config} step={step.id} apply={apply} />
+            <StepControls config={config} step={step.id} apply={apply} t={t} />
           </div>
         </section>
 
@@ -200,7 +220,9 @@ export function Configurator({
               <ShutterPreview config={config} openPercent={openPercent} />
             </div>
             <div className="flex items-center gap-3 border-t border-border px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground">Open</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {t('configure.open')}
+              </span>
               <input
                 type="range"
                 min={0}
@@ -208,13 +230,15 @@ export function Configurator({
                 value={openPercent}
                 onChange={(e) => setOpenPercent(Number(e.target.value))}
                 className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-muted accent-primary"
-                aria-label="Preview open and close position"
+                aria-label={t('configure.previewAria')}
               />
-              <span className="text-xs font-medium text-muted-foreground">Closed</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                {t('configure.closed')}
+              </span>
             </div>
           </div>
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            Drag to see the shutter open and close.
+            {t('configure.dragHint')}
           </p>
         </section>
 
@@ -223,7 +247,7 @@ export function Configurator({
           <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="pos-name" className="text-xs font-medium text-muted-foreground">
-                Position name
+                {t('configure.positionName')}
               </label>
               <Input
                 id="pos-name"
@@ -235,7 +259,7 @@ export function Configurator({
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium">Progress</span>
+                <span className="font-medium">{t('configure.progress')}</span>
                 <span className="text-muted-foreground">{progress}%</span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -248,7 +272,12 @@ export function Configurator({
 
             <div className="border-t border-border" />
 
-            <SummaryList config={config} activeStep={step.id} onJump={(i) => setStepIndex(i)} />
+            <SummaryList
+              config={config}
+              activeStep={step.id}
+              onJump={(i) => setStepIndex(i)}
+              t={t}
+            />
 
             <div className="border-t border-border" />
 
@@ -256,12 +285,12 @@ export function Configurator({
               {isConfigComplete(config) ? (
                 <Badge variant="success">
                   <Check className="size-3" />
-                  Valid configuration
+                  {t('configure.validConfig')}
                 </Badge>
               ) : (
                 <Badge variant="warning">
                   <CircleAlert className="size-3" />
-                  {6 - REQUIRED_DONE(config)} choices left
+                  {t('configure.choicesLeft', { count: choicesLeft })}
                 </Badge>
               )}
             </div>
@@ -274,7 +303,7 @@ export function Configurator({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
           <Button variant="ghost" size="lg" className="h-11" onClick={goBack}>
             <ArrowLeft className="size-4" />
-            Back
+            {t('configure.back')}
           </Button>
 
           <div className="flex items-center gap-2">
@@ -284,7 +313,7 @@ export function Configurator({
               className="h-11"
               onClick={() => router.push(`/dashboard/projects/${projectId}`)}
             >
-              Save draft
+              {t('configure.saveDraft')}
             </Button>
             <Button
               size="lg"
@@ -292,7 +321,7 @@ export function Configurator({
               disabled={!stepComplete && step.id !== 'extras'}
               onClick={goNext}
             >
-              {isLast ? 'Finish' : 'Next'}
+              {isLast ? t('configure.finish') : t('configure.next')}
               {!isLast && <ArrowRight className="size-4" />}
               {isLast && <Check className="size-4" />}
             </Button>
@@ -316,11 +345,13 @@ function StepRail({
   current,
   index,
   onJump,
+  t,
 }: {
   config: Configuration
   current: StepId
   index: number
   onJump: (i: number) => void
+  t: TranslateFn
 }) {
   return (
     <div className="flex items-center gap-1.5 overflow-x-auto">
@@ -355,7 +386,7 @@ function StepRail({
             >
               {done ? <Check className="size-3" /> : i + 1}
             </span>
-            {s.title}
+            {stepTitle(s.id, t)}
           </button>
         )
       })}
@@ -369,22 +400,51 @@ function SummaryList({
   config,
   activeStep,
   onJump,
+  t,
 }: {
   config: Configuration
   activeStep: StepId
   onJump: (i: number) => void
+  t: TranslateFn
 }) {
+  const dash = t('common.emDash')
   const rows: { step: StepId; label: string; value: string }[] = [
-    { step: 'application', label: 'Application', value: applicationLabel(config.application) },
-    { step: 'dimensions', label: 'Size', value: formatDimensions(config.width, config.height) },
-    { step: 'mounting', label: 'Fitting', value: mountingLabel(config.mounting) },
-    { step: 'profile', label: 'Type', value: profileLabel(config.profile) },
-    { step: 'color', label: 'Colour', value: colorLabel(config.color) },
-    { step: 'operation', label: 'Operation', value: operationLabel(config.operation) },
+    {
+      step: 'application',
+      label: stepTitle('application', t),
+      value: applicationLabel(config.application, t),
+    },
+    {
+      step: 'dimensions',
+      label: stepTitle('dimensions', t),
+      value: formatDimensions(config.width, config.height, t),
+    },
+    {
+      step: 'mounting',
+      label: stepTitle('mounting', t),
+      value: mountingLabel(config.mounting, t),
+    },
+    {
+      step: 'profile',
+      label: stepTitle('profile', t),
+      value: profileLabel(config.profile, t),
+    },
+    {
+      step: 'color',
+      label: stepTitle('color', t),
+      value: colorLabel(config.color, t),
+    },
+    {
+      step: 'operation',
+      label: stepTitle('operation', t),
+      value: operationLabel(config.operation, t),
+    },
     {
       step: 'extras',
-      label: 'Extras',
-      value: config.extras.length ? config.extras.map(extraLabel).join(', ') : 'None',
+      label: stepTitle('extras', t),
+      value: config.extras.length
+        ? config.extras.map((id) => extraLabel(id, t)).join(', ')
+        : t('configure.extrasNone'),
     },
   ]
 
@@ -392,7 +452,7 @@ function SummaryList({
     <dl className="flex flex-col">
       {rows.map((row) => {
         const idx = STEPS.findIndex((s) => s.id === row.step)
-        const set = row.value !== '—'
+        const set = row.value !== dash && row.value !== t('format.notSized')
         return (
           <button
             key={row.step}
@@ -425,10 +485,12 @@ function StepControls({
   config,
   step,
   apply,
+  t,
 }: {
   config: Configuration
   step: StepId
   apply: (partial: Partial<Configuration>) => void
+  t: TranslateFn
 }) {
   switch (step) {
     case 'application':
@@ -437,8 +499,8 @@ function StepControls({
           {APPLICATIONS.map((a) => (
             <OptionCard
               key={a.id}
-              label={a.label}
-              description={a.description}
+              label={t(`options.applications.${a.id}.label`)}
+              description={t(`options.applications.${a.id}.description`)}
               icon={APP_ICONS[a.id]}
               selected={config.application === a.id}
               onSelect={() =>
@@ -454,7 +516,7 @@ function StepControls({
       )
 
     case 'dimensions':
-      return <DimensionControls config={config} apply={apply} />
+      return <DimensionControls config={config} apply={apply} t={t} />
 
     case 'mounting':
       return (
@@ -462,8 +524,8 @@ function StepControls({
           {MOUNTINGS.map((m) => (
             <OptionCard
               key={m.id}
-              label={m.label}
-              description={m.description}
+              label={t(`options.mountings.${m.id}.label`)}
+              description={t(`options.mountings.${m.id}.description`)}
               icon={MOUNT_ICONS[m.id]}
               selected={config.mounting === m.id}
               onSelect={() => apply({ mounting: m.id })}
@@ -479,15 +541,15 @@ function StepControls({
           {available.map((p) => (
             <OptionCard
               key={p.id}
-              label={p.label}
-              description={p.description}
+              label={t(`options.profiles.${p.id}.label`)}
+              description={t(`options.profiles.${p.id}.description`)}
               selected={config.profile === p.id}
               onSelect={() => apply({ profile: p.id as ProfileId })}
             />
           ))}
           {available.length < PROFILES.length && (
             <p className="px-1 text-xs text-muted-foreground">
-              Some types are hidden because they are not suitable for this size.
+              {t('configure.profilesHidden')}
             </p>
           )}
         </div>
@@ -513,11 +575,13 @@ function StepControls({
                 )}
               >
                 <span
-                  className="size-12 rounded-lg border border-black/10 shadow-inner"
+                  className="size-12 rounded-lg border border-black/10 shadow-inner dark:border-white/10"
                   style={{ backgroundColor: c.hex }}
                   aria-hidden
                 />
-                <span className="text-center text-xs font-medium leading-tight">{c.label}</span>
+                <span className="text-center text-xs font-medium leading-tight">
+                  {t(`options.colors.${c.id}`)}
+                </span>
               </button>
             )
           })}
@@ -531,8 +595,8 @@ function StepControls({
           {available.map((o) => (
             <OptionCard
               key={o.id}
-              label={o.label}
-              description={o.description}
+              label={t(`options.operations.${o.id}.label`)}
+              description={t(`options.operations.${o.id}.description`)}
               icon={OP_ICONS[o.id]}
               selected={config.operation === o.id}
               onSelect={() => apply({ operation: o.id as OperationId })}
@@ -540,7 +604,7 @@ function StepControls({
           ))}
           {available.length < OPERATIONS.length && (
             <p className="px-1 text-xs text-muted-foreground">
-              Manual options are hidden for larger shutters, where a motor is recommended.
+              {t('configure.operationsHidden')}
             </p>
           )}
         </div>
@@ -556,8 +620,8 @@ function StepControls({
             return (
               <OptionCard
                 key={e.id}
-                label={e.label}
-                description={e.description}
+                label={t(`options.extras.${e.id}.label`)}
+                description={t(`options.extras.${e.id}.description`)}
                 icon={EXTRA_ICONS[e.id]}
                 selected={selected}
                 onSelect={() =>
@@ -571,9 +635,7 @@ function StepControls({
             )
           })}
           {available.length < EXTRAS.length && (
-            <p className="px-1 text-xs text-muted-foreground">
-              Solar power is available once a motorised operation is selected.
-            </p>
+            <p className="px-1 text-xs text-muted-foreground">{t('configure.solarHidden')}</p>
           )}
         </div>
       )
@@ -589,16 +651,18 @@ function StepControls({
 function DimensionControls({
   config,
   apply,
+  t,
 }: {
   config: Configuration
   apply: (partial: Partial<Configuration>) => void
+  t: TranslateFn
 }) {
   const area = areaM2(config)
   const presets = [
-    { label: 'Small window', width: 800, height: 1000 },
-    { label: 'Standard window', width: 1200, height: 1400 },
-    { label: 'Patio door', width: 1600, height: 2100 },
-    { label: 'Wide opening', width: 2800, height: 2400 },
+    { label: t('configure.presetSmall'), width: 800, height: 1000 },
+    { label: t('configure.presetStandard'), width: 1200, height: 1400 },
+    { label: t('configure.presetPatio'), width: 1600, height: 2100 },
+    { label: t('configure.presetWide'), width: 2800, height: 2400 },
   ]
 
   function field(key: 'width' | 'height', label: string) {
@@ -631,7 +695,7 @@ function DimensionControls({
         </div>
         {invalid && (
           <p className="text-xs text-destructive">
-            Enter a value between {limits.min} and {limits.max} mm.
+            {t('configure.dimensionInvalid', { min: limits.min, max: limits.max })}
           </p>
         )}
       </div>
@@ -641,18 +705,19 @@ function DimensionControls({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3">
-        {field('width', 'Width')}
-        {field('height', 'Height')}
+        {field('width', t('configure.width'))}
+        {field('height', t('configure.height'))}
       </div>
 
       {area > 0 && (
         <div className="rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-          Opening area: <span className="font-medium text-foreground">{area.toFixed(2)} m²</span>
+          {t('configure.openingArea')}{' '}
+          <span className="font-medium text-foreground">{area.toFixed(2)} m²</span>
         </div>
       )}
 
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-medium text-muted-foreground">Common sizes</p>
+        <p className="text-xs font-medium text-muted-foreground">{t('configure.commonSizes')}</p>
         <div className="flex flex-wrap gap-2">
           {presets.map((p) => (
             <button

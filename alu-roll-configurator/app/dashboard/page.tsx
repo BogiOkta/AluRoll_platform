@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { ArrowUpRight, LayoutGrid, Plus, Search, Table2 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { CreateProjectModal } from '@/components/create-project-modal'
+import { useSettings } from '@/components/settings-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { formatRelative } from '@/lib/format'
+import { formatRelative, positionWord } from '@/lib/format'
 import { isConfigComplete } from '@/lib/config-schema'
 import type { Project } from '@/lib/types'
 
@@ -21,6 +22,7 @@ function projectStats(project: Project) {
 
 export default function DashboardPage() {
   const { projects } = useApp()
+  const { t, language } = useSettings()
   const [query, setQuery] = useState('')
   const [view, setView] = useState<'grid' | 'table'>('grid')
   const [modalOpen, setModalOpen] = useState(false)
@@ -44,17 +46,15 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-        <p className="text-sm text-muted-foreground">
-          Create and manage your roller shutter configurations.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('dashboard.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
       </div>
 
       {/* Recent */}
       {recent.length > 0 && (
         <section className="mt-7">
           <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            Recent
+            {t('dashboard.recent')}
           </h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {recent.map((project) => {
@@ -76,9 +76,9 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
-                      {stats.total} {stats.total === 1 ? 'position' : 'positions'}
+                      {stats.total} {positionWord(stats.total, t, language)}
                     </span>
-                    <span>{formatRelative(project.updatedAt)}</span>
+                    <span>{formatRelative(project.updatedAt, t, language)}</span>
                   </div>
                 </Link>
               )
@@ -94,9 +94,9 @@ export default function DashboardPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search projects…"
+            placeholder={t('dashboard.searchPlaceholder')}
             className="pl-9"
-            aria-label="Search projects"
+            aria-label={t('dashboard.searchAria')}
           />
         </div>
         <div className="flex items-center gap-2">
@@ -109,7 +109,7 @@ export default function DashboardPage() {
                   ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
-              aria-label="Grid view"
+              aria-label={t('dashboard.gridView')}
               aria-pressed={view === 'grid'}
             >
               <LayoutGrid className="size-4" />
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                   ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
-              aria-label="Table view"
+              aria-label={t('dashboard.tableView')}
               aria-pressed={view === 'table'}
             >
               <Table2 className="size-4" />
@@ -130,7 +130,7 @@ export default function DashboardPage() {
           </div>
           <Button size="lg" className="h-10" onClick={() => setModalOpen(true)}>
             <Plus className="size-4" />
-            New project
+            {t('dashboard.newProject')}
           </Button>
         </div>
       </div>
@@ -138,10 +138,8 @@ export default function DashboardPage() {
       {/* Content */}
       {filtered.length === 0 ? (
         <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/50 py-16 text-center">
-          <p className="text-sm font-medium">No projects found</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Try a different search, or create a new project.
-          </p>
+          <p className="text-sm font-medium">{t('dashboard.noProjectsTitle')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('dashboard.noProjectsBody')}</p>
         </div>
       ) : view === 'grid' ? (
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -166,7 +164,10 @@ export default function DashboardPage() {
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
-                      {stats.complete} of {stats.total} ready
+                      {t('dashboard.readyOf', {
+                        complete: stats.complete,
+                        total: stats.total,
+                      })}
                     </span>
                     <span>{stats.pct}%</span>
                   </div>
@@ -180,9 +181,13 @@ export default function DashboardPage() {
 
                 <div className="flex items-center justify-between border-t border-border/70 pt-3 text-xs text-muted-foreground">
                   <span>
-                    {stats.total} {stats.total === 1 ? 'position' : 'positions'}
+                    {stats.total} {positionWord(stats.total, t, language)}
                   </span>
-                  <span>Updated {formatRelative(project.updatedAt)}</span>
+                  <span>
+                    {t('dashboard.updated', {
+                      when: formatRelative(project.updatedAt, t, language),
+                    })}
+                  </span>
                 </div>
               </Link>
             )
@@ -193,11 +198,17 @@ export default function DashboardPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Project</th>
-                <th className="hidden px-4 py-3 font-medium sm:table-cell">Reference</th>
-                <th className="px-4 py-3 font-medium">Positions</th>
-                <th className="hidden px-4 py-3 font-medium md:table-cell">Progress</th>
-                <th className="hidden px-4 py-3 font-medium lg:table-cell">Updated</th>
+                <th className="px-4 py-3 font-medium">{t('dashboard.colProject')}</th>
+                <th className="hidden px-4 py-3 font-medium sm:table-cell">
+                  {t('dashboard.colReference')}
+                </th>
+                <th className="px-4 py-3 font-medium">{t('dashboard.colPositions')}</th>
+                <th className="hidden px-4 py-3 font-medium md:table-cell">
+                  {t('dashboard.colProgress')}
+                </th>
+                <th className="hidden px-4 py-3 font-medium lg:table-cell">
+                  {t('dashboard.colUpdated')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -233,7 +244,7 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td className="hidden px-4 py-3 text-xs text-muted-foreground lg:table-cell">
-                      {formatRelative(project.updatedAt)}
+                      {formatRelative(project.updatedAt, t, language)}
                     </td>
                   </tr>
                 )
